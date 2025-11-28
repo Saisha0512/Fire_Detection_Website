@@ -31,7 +31,18 @@ const LocationsStatus = () => {
 
   useEffect(() => {
     fetchLocations();
-  }, []);
+    
+    // Set up automatic refresh every 30 seconds
+    const interval = setInterval(() => {
+      locations.forEach(location => {
+        if (location.thingspeak_channel_id && location.thingspeak_read_key) {
+          fetchSensorData(location.id, location.name, location.thingspeak_channel_id, location.thingspeak_read_key);
+        }
+      });
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [locations]);
 
   const fetchLocations = async () => {
     try {
@@ -86,11 +97,40 @@ const LocationsStatus = () => {
             created_at: data.data.timestamp,
           }
         }));
+
+        // Automatically evaluate sensor data for alerts
+        evaluateAlerts(locationId);
       }
     } catch (error) {
       console.error(`Error fetching sensor data for ${locationId}:`, error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const evaluateAlerts = async (locationId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('alert-manager', {
+        body: {
+          action: 'evaluate',
+          locationId: locationId
+        }
+      });
+
+      if (error) {
+        console.error('Error evaluating alerts:', error);
+        return;
+      }
+
+      if (data?.created) {
+        toast({
+          title: "🚨 Alert Created!",
+          description: `${data.alert.alert_type.toUpperCase()} detected - ${data.alert.severity} severity`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error calling alert-manager:', error);
     }
   };
 
