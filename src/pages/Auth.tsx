@@ -79,7 +79,7 @@ const Auth = () => {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent, userType: "authority" | "normal") => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -93,6 +93,7 @@ const Auth = () => {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             full_name: validated.fullName,
+            user_type: userType,
           },
         },
       });
@@ -103,12 +104,13 @@ const Auth = () => {
         await supabase.from("profiles").insert({
           user_id: authData.user.id,
           full_name: validated.fullName,
+          user_type: userType,
         });
       }
 
       toast({
         title: "Account created",
-        description: "Welcome to Fire Defence System",
+        description: `Welcome to FireProtect as ${userType === "authority" ? "Fire Authority" : "Civilian"}`,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -181,43 +183,98 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={signupData.fullName}
-                    onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="officer@firedefence.com"
-                    value={signupData.email}
-                    onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={signupData.password}
-                    onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creating account..." : "Create Account"}
-                </Button>
-              </form>
+              <div className="space-y-4 mt-4">
+                <p className="text-sm text-center text-muted-foreground">
+                  Choose your account type
+                </p>
+                
+                <Tabs defaultValue="normal">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="normal">Civilian</TabsTrigger>
+                    <TabsTrigger value="authority">Fire Authority</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="normal">
+                    <form onSubmit={(e) => handleSignup(e, "normal")} className="space-y-4 mt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-name-normal">Full Name</Label>
+                        <Input
+                          id="signup-name-normal"
+                          type="text"
+                          placeholder="John Doe"
+                          value={signupData.fullName}
+                          onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email-normal">Email</Label>
+                        <Input
+                          id="signup-email-normal"
+                          type="email"
+                          placeholder="user@example.com"
+                          value={signupData.email}
+                          onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password-normal">Password</Label>
+                        <Input
+                          id="signup-password-normal"
+                          type="password"
+                          value={signupData.password}
+                          onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Creating account..." : "Create Civilian Account"}
+                      </Button>
+                    </form>
+                  </TabsContent>
+                  
+                  <TabsContent value="authority">
+                    <form onSubmit={(e) => handleSignup(e, "authority")} className="space-y-4 mt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-name-auth">Full Name</Label>
+                        <Input
+                          id="signup-name-auth"
+                          type="text"
+                          placeholder="Officer John Doe"
+                          value={signupData.fullName}
+                          onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email-auth">Official Email</Label>
+                        <Input
+                          id="signup-email-auth"
+                          type="email"
+                          placeholder="officer@firestation.gov"
+                          value={signupData.email}
+                          onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password-auth">Password</Label>
+                        <Input
+                          id="signup-password-auth"
+                          type="password"
+                          value={signupData.password}
+                          onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Creating account..." : "Create Authority Account"}
+                      </Button>
+                    </form>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

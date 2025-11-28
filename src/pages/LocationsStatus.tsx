@@ -46,7 +46,7 @@ const LocationsStatus = () => {
       // Fetch sensor data for all locations
       data?.forEach(location => {
         if (location.thingspeak_channel_id && location.thingspeak_read_key) {
-          fetchSensorData(location.id, location.thingspeak_channel_id, location.thingspeak_read_key);
+          fetchSensorData(location.id, location.name, location.thingspeak_channel_id, location.thingspeak_read_key);
         }
       });
     } catch (error) {
@@ -58,14 +58,17 @@ const LocationsStatus = () => {
     }
   };
 
-  const fetchSensorData = async (locationId: string, channelId: string, readKey: string) => {
+  const fetchSensorData = async (locationId: string, name: string, channelId: string, readKey: string) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('thingspeak-service', {
         body: {
-          action: 'getLive',
-          channelId,
-          readKey,
+          action: 'latest',
+          location: {
+            name,
+            thingspeak_channel_id: channelId,
+            thingspeak_read_key: readKey,
+          }
         }
       });
 
@@ -75,12 +78,12 @@ const LocationsStatus = () => {
         setSensorData(prev => ({
           ...prev,
           [locationId]: {
-            field1: data.data.field1 || 0,
-            field2: data.data.field2 || 0,
-            field3: data.data.field3 || 0,
-            field4: data.data.field4 || 0,
-            field5: data.data.field5 || 0,
-            created_at: data.data.created_at,
+            field1: data.data.temperature || 0,
+            field2: data.data.humidity || 0,
+            field3: data.data.flame || 0,
+            field4: data.data.gas || 0,
+            field5: data.data.pir || 0,
+            created_at: data.data.timestamp,
           }
         }));
       }
@@ -94,7 +97,7 @@ const LocationsStatus = () => {
   const refreshAll = () => {
     locations.forEach(location => {
       if (location.thingspeak_channel_id && location.thingspeak_read_key) {
-        fetchSensorData(location.id, location.thingspeak_channel_id, location.thingspeak_read_key);
+        fetchSensorData(location.id, location.name, location.thingspeak_channel_id, location.thingspeak_read_key);
       }
     });
   };

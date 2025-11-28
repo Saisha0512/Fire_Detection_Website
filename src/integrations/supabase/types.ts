@@ -67,6 +67,57 @@ export type Database = {
           },
         ]
       }
+      location_requests: {
+        Row: {
+          created_at: string
+          id: string
+          latitude: number
+          location_name: string
+          longitude: number
+          reason: string | null
+          region: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          thingspeak_channel_id: string
+          thingspeak_read_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          latitude: number
+          location_name: string
+          longitude: number
+          reason?: string | null
+          region: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          thingspeak_channel_id: string
+          thingspeak_read_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          latitude?: number
+          location_name?: string
+          longitude?: number
+          reason?: string | null
+          region?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          thingspeak_channel_id?: string
+          thingspeak_read_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           created_at: string
@@ -108,31 +159,46 @@ export type Database = {
       }
       profiles: {
         Row: {
+          authority_name: string | null
           avatar_url: string | null
+          badge_number: string | null
           created_at: string
+          department: string | null
+          fire_station: string | null
           full_name: string | null
           id: string
           phone: string | null
           updated_at: string
           user_id: string
+          user_type: string | null
         }
         Insert: {
+          authority_name?: string | null
           avatar_url?: string | null
+          badge_number?: string | null
           created_at?: string
+          department?: string | null
+          fire_station?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
           updated_at?: string
           user_id: string
+          user_type?: string | null
         }
         Update: {
+          authority_name?: string | null
           avatar_url?: string | null
+          badge_number?: string | null
           created_at?: string
+          department?: string | null
+          fire_station?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
           updated_at?: string
           user_id?: string
+          user_type?: string | null
         }
         Relationships: []
       }

@@ -1,4 +1,4 @@
-import { Home, AlertTriangle, MapPin, BarChart3, CheckCircle, LogOut } from "lucide-react";
+import { Home, AlertTriangle, MapPin, BarChart3, CheckCircle, LogOut, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ const menuItems = [
   { title: "Alerts", url: "/alerts", icon: AlertTriangle },
   { title: "Locations Status", url: "/locations-status", icon: MapPin },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Profile", url: "/profile", icon: User },
   { title: "Solved Cases", url: "/solved-cases", icon: CheckCircle },
 ];
 
