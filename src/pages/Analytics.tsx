@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useToast } from "@/hooks/use-toast";
+import { AlertTrendsChart } from "@/components/AlertTrendsChart";
 
 const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
@@ -136,6 +137,9 @@ const Analytics = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Historical Trends Chart */}
+      <AlertTrendsChart />
 
       {/* Charts */}
       <div className="grid gap-6 md:grid-cols-2">
