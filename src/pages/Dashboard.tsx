@@ -15,10 +15,10 @@ import { formatDistanceToNow } from "date-fns";
 interface Alert {
   id: string;
   location_id: string;
-  alert_type: "fire" | "gas" | "temp" | "motion";
+  alert_type: "fire" | "gas_leak" | "temperature" | "motion";
   timestamp: string;
   severity: "low" | "medium" | "high" | "critical";
-  status: "active" | "resolved" | "false_alarm";
+  status: "active" | "resolved" | "false_alarm" | "in_queue" | "unsolved";
   locations: {
     name: string;
   };
@@ -94,6 +94,30 @@ const Dashboard = () => {
     navigate("/auth");
   };
 
+  const handleStatusChange = async (alertId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("alerts")
+        .update({ status: newStatus })
+        .eq("id", alertId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Alert Updated",
+        description: `Alert marked as ${newStatus.replace('_', ' ')}`,
+      });
+      
+      fetchAlerts();
+    } catch (error) {
+      toast({
+        title: "Error updating alert",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-50">
@@ -164,6 +188,7 @@ const Dashboard = () => {
                   timestamp={alert.timestamp}
                   severity={alert.severity}
                   status={alert.status}
+                  onStatusChange={handleStatusChange}
                 />
               ))
             )}

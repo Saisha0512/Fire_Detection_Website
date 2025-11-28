@@ -8,16 +8,17 @@ import { useNavigate } from "react-router-dom";
 interface NotificationCardProps {
   id: string;
   locationType: string;
-  alertType: "fire" | "gas" | "temp" | "motion";
+  alertType: "fire" | "gas_leak" | "temperature" | "motion";
   timestamp: string;
   severity: "low" | "medium" | "high" | "critical";
-  status: "active" | "resolved" | "false_alarm";
+  status: "active" | "resolved" | "false_alarm" | "in_queue" | "unsolved";
+  onStatusChange?: (alertId: string, newStatus: string) => void;
 }
 
 const alertIcons = {
   fire: Flame,
-  gas: Wind,
-  temp: Gauge,
+  gas_leak: Wind,
+  temperature: Gauge,
   motion: AlertTriangle,
 };
 
@@ -35,10 +36,17 @@ export const NotificationCard = ({
   timestamp,
   severity,
   status,
+  onStatusChange,
 }: NotificationCardProps) => {
   const navigate = useNavigate();
   const Icon = alertIcons[alertType];
   const isActive = status === "active";
+
+  const handleStatusChange = (newStatus: string) => {
+    if (onStatusChange) {
+      onStatusChange(id, newStatus);
+    }
+  };
 
   return (
     <Card 
@@ -70,17 +78,46 @@ export const NotificationCard = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Badge variant="outline">{alertType}</Badge>
             <Badge variant={isActive ? "default" : "secondary"}>
-              {status}
+              {status.replace('_', ' ')}
             </Badge>
           </div>
+          
+          <div className="flex flex-wrap items-center gap-2">
+            <Button 
+              size="sm" 
+              variant={status === "in_queue" ? "default" : "outline"}
+              onClick={() => handleStatusChange("in_queue")}
+              className="flex-1 min-w-[100px]"
+            >
+              In Queue
+            </Button>
+            <Button 
+              size="sm" 
+              variant={status === "resolved" ? "default" : "outline"}
+              onClick={() => handleStatusChange("resolved")}
+              className="flex-1 min-w-[100px]"
+            >
+              Solved
+            </Button>
+            <Button 
+              size="sm" 
+              variant={status === "unsolved" ? "default" : "outline"}
+              onClick={() => handleStatusChange("unsolved")}
+              className="flex-1 min-w-[100px]"
+            >
+              Unsolved
+            </Button>
+          </div>
+          
           <Button 
             size="sm" 
-            variant={isActive ? "default" : "secondary"}
+            variant="secondary"
             onClick={() => navigate(`/alert/${id}`)}
+            className="w-full"
           >
             View Details
           </Button>

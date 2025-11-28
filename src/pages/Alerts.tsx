@@ -11,10 +11,10 @@ import { Flame, AlertTriangle, Wind, Thermometer, Users } from "lucide-react";
 interface Alert {
   id: string;
   location_id: string;
-  alert_type: "fire" | "gas" | "temp" | "motion";
+  alert_type: "fire" | "gas_leak" | "temperature" | "motion";
   timestamp: string;
   severity: "low" | "medium" | "high" | "critical";
-  status: "active" | "resolved" | "false_alarm";
+  status: "active" | "resolved" | "false_alarm" | "in_queue" | "unsolved";
   locations: { name: string };
   sensor_values: any;
 }
@@ -51,10 +51,10 @@ const Alerts = () => {
       if (error) throw error;
 
       const alerts = (data || []) as Alert[];
-      setLiveAlerts(alerts.filter(a => a.status === "active"));
-      setPastAlerts(alerts.filter(a => a.status !== "active"));
+      setLiveAlerts(alerts.filter(a => a.status === "active" || a.status === "in_queue"));
+      setPastAlerts(alerts.filter(a => a.status === "resolved" || a.status === "false_alarm"));
       setSolvedCases(alerts.filter(a => a.status === "resolved"));
-      setUnsolvedCases(alerts.filter(a => a.status === "active"));
+      setUnsolvedCases(alerts.filter(a => a.status === "unsolved"));
     } catch (error) {
       toast({
         title: "Error fetching alerts",
@@ -64,7 +64,7 @@ const Alerts = () => {
     }
   };
 
-  const updateAlertStatus = async (alertId: string, newStatus: "active" | "resolved" | "false_alarm") => {
+  const updateAlertStatus = async (alertId: string, newStatus: "active" | "resolved" | "false_alarm" | "in_queue" | "unsolved") => {
     try {
       const { error } = await supabase
         .from("alerts")
@@ -75,7 +75,7 @@ const Alerts = () => {
 
       toast({
         title: "Alert Updated",
-        description: `Alert marked as ${newStatus}`,
+        description: `Alert marked as ${newStatus.replace('_', ' ')}`,
       });
       
       fetchAlerts();
@@ -91,8 +91,8 @@ const Alerts = () => {
   const getAlertIcon = (type: string) => {
     switch (type) {
       case "fire": return <Flame className="h-5 w-5 text-destructive" />;
-      case "gas": return <Wind className="h-5 w-5 text-status-warning" />;
-      case "temp": return <Thermometer className="h-5 w-5 text-status-alert" />;
+      case "gas_leak": return <Wind className="h-5 w-5 text-status-warning" />;
+      case "temperature": return <Thermometer className="h-5 w-5 text-status-alert" />;
       case "motion": return <Users className="h-5 w-5 text-primary" />;
       default: return <AlertTriangle className="h-5 w-5" />;
     }
@@ -101,44 +101,61 @@ const Alerts = () => {
   const AlertBox = ({ alert }: { alert: Alert }) => (
     <Card className="mb-4 border-l-4 border-l-destructive">
       <CardContent className="pt-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2 flex-1">
-            <div className="flex items-center gap-3">
-              {getAlertIcon(alert.alert_type)}
-              <div>
-                <h3 className="font-semibold">{alert.locations?.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true })}
-                </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-3">
+                {getAlertIcon(alert.alert_type)}
+                <div>
+                  <h3 className="font-semibold text-lg">{alert.locations?.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true })}
+                  </p>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Badge variant="destructive">{alert.alert_type.toUpperCase()}</Badge>
-              <Badge variant="outline">{alert.severity}</Badge>
-              <Badge>{alert.status}</Badge>
-            </div>
+              
+              <div className="flex gap-2">
+                <Badge variant="destructive">{alert.alert_type.toUpperCase().replace('_', ' ')}</Badge>
+                <Badge variant="outline">{alert.severity}</Badge>
+                <Badge>{alert.status.replace('_', ' ')}</Badge>
+              </div>
 
-            {alert.sensor_values && (
-              <div className="text-sm text-muted-foreground mt-2">
-                <p>Temperature: {alert.sensor_values.temperature}°C</p>
-                <p>Gas Level: {alert.sensor_values.gas}</p>
-                <p>Flame: {alert.sensor_values.flame ? "Detected" : "None"}</p>
-              </div>
-            )}
+              {alert.sensor_values && (
+                <div className="text-sm text-muted-foreground mt-2 space-y-1">
+                  <p>🌡️ Temperature: {alert.sensor_values.temperature}°C</p>
+                  <p>💨 Gas Level: {alert.sensor_values.gas}</p>
+                  <p>🔥 Flame: {alert.sensor_values.flame === '0' ? "Detected" : "None"}</p>
+                  <p>📍 PIR: {alert.sensor_values.pir === '0' ? "Motion Detected" : "No Motion"}</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {alert.status === "active" && (
-              <>
-                <Button size="sm" onClick={() => updateAlertStatus(alert.id, "resolved")}>
-                  Mark Solved
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => updateAlertStatus(alert.id, "false_alarm")}>
-                  False Alarm
-                </Button>
-              </>
-            )}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              size="sm" 
+              variant={alert.status === "in_queue" ? "default" : "outline"}
+              onClick={() => updateAlertStatus(alert.id, "in_queue")}
+              className="flex-1 min-w-[120px]"
+            >
+              In Queue
+            </Button>
+            <Button 
+              size="sm" 
+              variant={alert.status === "resolved" ? "default" : "outline"}
+              onClick={() => updateAlertStatus(alert.id, "resolved")}
+              className="flex-1 min-w-[120px]"
+            >
+              Solved
+            </Button>
+            <Button 
+              size="sm" 
+              variant={alert.status === "unsolved" ? "default" : "outline"}
+              onClick={() => updateAlertStatus(alert.id, "unsolved")}
+              className="flex-1 min-w-[120px]"
+            >
+              Unsolved
+            </Button>
           </div>
         </div>
       </CardContent>
